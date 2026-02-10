@@ -1,0 +1,28 @@
+#include "vga.h"
+
+static volatile uint16_t* const VGA = (uint16_t*)0xB8000;
+static size_t row = 0, col = 0;
+static uint8_t color = 0x0F; // white on black
+
+static inline uint16_t vga_entry(char c, uint8_t colr) {
+    return (uint16_t)c | ((uint16_t)colr << 8);
+}
+
+void vga_clear(void) {
+    for (size_t i = 0; i < 80 * 25; i++) VGA[i] = vga_entry(' ', color);
+    row = 0; col = 0;
+}
+
+static void newline(void) {
+    col = 0;
+    if (++row >= 25) row = 0; // minimal scroll yo'q (keyin qo'shasiz)
+}
+
+void vga_write(const char* s) {
+    for (size_t i = 0; s[i] != '\0'; i++) {
+        char c = s[i];
+        if (c == '\n') { newline(); continue; }
+        VGA[row * 80 + col] = vga_entry(c, color);
+        if (++col >= 80) newline();
+    }
+}

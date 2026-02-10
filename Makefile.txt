@@ -1,0 +1,48 @@
+ARCH := x86_64
+BUILD := build
+ISO := $(BUILD)/minios.iso
+
+CC := x86_64-elf-gcc
+LD := x86_64-elf-ld
+AS := x86_64-elf-as
+
+CFLAGS := -ffreestanding -O2 -Wall -Wextra -std=c11 -fno-pie -no-pie
+LDFLAGS := -nostdlib
+
+KERNEL_ELF := $(BUILD)/kernel.elf
+
+C_SRCS := kernel/kernel.c kernel/vga.c
+S_SRCS := arch/$(ARCH)/boot.S
+OBJS := $(patsubst %.c,$(BUILD)/%.o,$(C_SRCS)) \
+        $(patsubst %.S,$(BUILD)/%.o,$(S_SRCS))
+
+.PHONY: all clean iso run dirs
+
+all: $(KERNEL_ELF)
+
+dirs:
+	@mkdir -p $(BUILD)/kernel $(BUILD)/arch/$(ARCH) $(BUILD)/iso/boot/grub
+
+$(BUILD)/%.o: %.c | dirs
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(BUILD)/%.o: %.S | dirs
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(KERNEL_ELF): $(OBJS) arch/$(ARCH)/linker.ld
+	$(CC) $(CFLAGS) $(LDFLAGS) -T arch/$(ARCH)/linker.ld -o $@ $(OBJS)
+
+iso: $(KERNEL_ELF)
+	@rm -rf $(BUILD)/iso
+	@mkdir -p $(BUILD)/iso/boot/grub
+	cp $(KERNEL_ELF) $(BUILD)/iso/boot/kernel.elf
+	cp iso/boot/grub/grub.cfg $(BUILD)/iso/boot/grub/grub.cfg
+	grub-mkrescue -o $(ISO) $(BUILD)/iso
+
+run: iso
+	qemu-system-x86_64 -cdrom $(ISO) -m 256M
+
+clean:
+	rm -rf $(BUILD)

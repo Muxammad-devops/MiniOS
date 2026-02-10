@@ -1,0 +1,11 @@
+#include <stdint.h>
+#include "vga.h"
+
+void kmain(void) {
+    vga_clear();
+    vga_write("miniOS booted!\n");
+    vga_write("GRUB (Multiboot2) -> x86_64 kernel\n");
+    vga_write("Next: interrupts, keyboard, memory, shell...\n");
+
+    for (;;) { __asm__ volatile ("hlt"); }
+}

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+docker run --rm -it \
+  -v "$PWD":/work -w /work \
+  --platform=linux/amd64 \
+  ghcr.io/cross-rs/x86_64-unknown-none-elf:latest \
+  bash -lc "apt-get update && apt-get install -y grub-pc-bin xorriso qemu-system-x86 && make run"

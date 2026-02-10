@@ -1,0 +1,31 @@
+.section .multiboot2_header
+.align 8
+/* Minimal Multiboot2 header (GRUB uchun) */
+.long 0xE85250D6          /* magic */
+.long 0                   /* architecture (i386) */
+.long 48                  /* header length */
+.long -(0xE85250D6 + 0 + 48)  /* checksum */
+
+/* End tag */
+.word 0
+.word 0
+.long 8
+
+.section .text
+.global _start
+.extern kmain
+
+_start:
+    /* Stack (simple) */
+    lea stack_top(%rip), %rsp
+    call kmain
+
+.hang:
+    hlt
+    jmp .hang
+
+.section .bss
+.align 16
+stack:
+    .skip 16384
+stack_top:

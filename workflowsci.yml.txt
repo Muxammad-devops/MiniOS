@@ -1,0 +1,21 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/cross-rs/x86_64-unknown-none-elf:latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install ISO deps
+        run: |
+          apt-get update
+          apt-get install -y grub-pc-bin xorriso
+      - name: Build kernel
+        run: make all
+      - name: Build ISO
+        run: make iso
